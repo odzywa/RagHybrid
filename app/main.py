@@ -1699,316 +1699,389 @@ def settings_page():
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>RAGHybrid — Ustawienia backendu</title>
+<title>RAGHybrid — Ustawienia</title>
 <style>
-  :root {
-    --bg: #f0f4f8; --panel: #fff; --text: #151922; --muted: #667085;
-    --line: #d9e1ea; --accent: #0f766e; --accent-soft: #d9f3ee;
-    --ok: #16a34a; --err: #dc2626; --warn: #d97706;
-  }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text);
-         font-family: Inter, ui-sans-serif, sans-serif; line-height: 1.6; }
-  main { width: min(860px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 56px; }
-  header { display: flex; justify-content: space-between; align-items: center;
-           padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
-  header h1 { margin: 0; font-size: 1.4rem; }
-  .nav-links { display: flex; gap: 16px; }
-  .nav-links a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
-          padding: 24px; margin-bottom: 20px; }
-  .card h2 { margin: 0 0 16px; font-size: 1rem; color: var(--accent);
-             border-bottom: 1px solid var(--line); padding-bottom: 8px; }
-  .field { margin-bottom: 14px; }
-  .field label { display: block; font-weight: 600; font-size: 0.85rem;
-                 color: var(--muted); margin-bottom: 4px; text-transform: uppercase;
-                 letter-spacing: 0.04em; }
-  .field input, .field select {
-    width: 100%; padding: 9px 12px; border: 1px solid var(--line);
-    border-radius: 6px; font: inherit; font-size: 0.92rem;
-    background: #f8fafc; transition: border 0.15s;
-  }
-  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
-  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
-  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
-  .status-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
-  .status-chip { display: flex; align-items: center; gap: 6px; background: #f8fafc;
-                 border: 1px solid var(--line); border-radius: 20px;
-                 padding: 4px 12px; font-size: 0.82rem; }
-  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-  .dot-ok  { background: var(--ok); }
-  .dot-err { background: var(--err); }
-  .dot-warn { background: var(--warn); animation: pulse 1.5s infinite; }
-  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
-  .btn { padding: 10px 22px; border: none; border-radius: 7px; cursor: pointer;
-         font: inherit; font-size: 0.92rem; font-weight: 600; transition: background 0.15s; }
-  .btn-primary { background: var(--accent); color: #fff; }
-  .btn-primary:hover { background: #115e59; }
-  .btn-test { background: #f0f4f8; color: var(--text); border: 1px solid var(--line); }
-  .btn-test:hover { background: #e2e8f0; }
-  .notice { padding: 10px 14px; border-radius: 7px; font-size: 0.88rem; margin-top: 12px; }
-  .notice-ok  { background: #dcfce7; color: #166534; }
-  .notice-err { background: #fee2e2; color: #991b1b; }
-  .section-note { font-size: 0.82rem; color: var(--muted); margin: -8px 0 12px; }
-  .backend-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
-  .pill { padding: 6px 16px; border-radius: 20px; border: 2px solid var(--line);
-          cursor: pointer; font-size: 0.88rem; font-weight: 600; background: #fff;
-          transition: all 0.15s; }
-  .pill.active { border-color: var(--accent); background: var(--accent-soft); color: #0f766e; }
-  .pill:hover:not(.active) { border-color: #94a3b8; }
+:root{--bg:#f0f4f8;--panel:#fff;--text:#151922;--muted:#667085;--line:#d9e1ea;
+      --accent:#0f766e;--asoft:#d9f3ee;--ok:#16a34a;--err:#dc2626;--warn:#d97706;}
+*{box-sizing:border-box;}
+body{margin:0;background:var(--bg);color:var(--text);
+     font-family:Inter,ui-sans-serif,sans-serif;line-height:1.6;}
+main{width:min(900px,calc(100% - 32px));margin:0 auto;padding:32px 0 60px;}
+header{display:flex;justify-content:space-between;align-items:center;
+       padding-bottom:18px;border-bottom:1px solid var(--line);margin-bottom:24px;}
+header h1{margin:0;font-size:1.35rem;}
+.nav a{color:var(--accent);text-decoration:none;font-weight:600;font-size:.9rem;margin-left:16px;}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:22px 24px;margin-bottom:18px;}
+.card-title{font-weight:700;font-size:.95rem;color:var(--accent);
+            border-bottom:1px solid var(--line);padding-bottom:8px;margin-bottom:16px;}
+
+/* Backend selector cards */
+.backend-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:0;}
+.bcard{border:2px solid var(--line);border-radius:10px;padding:16px 18px;
+       cursor:pointer;background:#fff;transition:all .15s;position:relative;}
+.bcard:hover{border-color:#94a3b8;}
+.bcard.on{border-color:var(--accent);background:var(--asoft);}
+.bcard .bc-icon{font-size:1.5rem;margin-bottom:6px;}
+.bcard .bc-name{font-weight:700;font-size:.95rem;}
+.bcard .bc-desc{font-size:.78rem;color:var(--muted);margin-top:2px;}
+.bcard .bc-port{font-size:.75rem;font-family:monospace;color:#0f766e;
+                background:#e0f2f1;border-radius:4px;padding:1px 6px;
+                display:inline-block;margin-top:4px;}
+
+/* Quick URL section that appears after selecting a backend */
+.url-wizard{display:none;background:linear-gradient(135deg,#f0fdf4,#eff6ff);
+            border:1px solid #c7d8e8;border-radius:10px;padding:20px 24px;
+            margin-bottom:18px;animation:fadein .2s;}
+.url-wizard.show{display:block;}
+@keyframes fadein{from{opacity:0;transform:translateY(-6px)}to{opacity:1;transform:none}}
+.url-wizard-title{font-weight:700;color:var(--accent);margin-bottom:14px;font-size:.95rem;}
+
+.field{margin-bottom:12px;}
+.field label{display:block;font-weight:600;font-size:.8rem;color:var(--muted);
+             margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+.field input,.field select{width:100%;padding:9px 12px;border:1px solid var(--line);
+  border-radius:6px;font:inherit;font-size:.92rem;background:#fff;}
+.field input:focus,.field select:focus{outline:none;border-color:var(--accent);}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;}
+
+/* Quick fill chips */
+.quick-chips{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px;}
+.qchip{padding:3px 10px;border-radius:12px;border:1px solid var(--line);
+       cursor:pointer;font-size:.78rem;background:#f8fafc;font-family:monospace;}
+.qchip:hover{background:var(--asoft);border-color:var(--accent);}
+
+/* Status */
+.status-row{display:flex;gap:8px;flex-wrap:wrap;}
+.schip{display:flex;align-items:center;gap:6px;background:#f8fafc;
+       border:1px solid var(--line);border-radius:20px;padding:5px 14px;font-size:.82rem;}
+.dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.ok-d{background:var(--ok);} .err-d{background:var(--err);}
+.warn-d{background:var(--warn);animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.4}}
+
+/* Advanced section toggle */
+.toggle-adv{cursor:pointer;font-size:.82rem;color:var(--accent);font-weight:600;
+            display:inline-flex;align-items:center;gap:4px;margin-bottom:12px;
+            user-select:none;}
+.adv-section{display:none;}
+.adv-section.open{display:block;}
+
+.btn{padding:10px 22px;border:none;border-radius:7px;cursor:pointer;
+     font:inherit;font-size:.92rem;font-weight:600;transition:background .15s;}
+.btn-save{background:var(--accent);color:#fff;} .btn-save:hover{background:#115e59;}
+.btn-test{background:#f0f4f8;color:var(--text);border:1px solid var(--line);}
+.btn-test:hover{background:#e2e8f0;}
+.notice{padding:10px 14px;border-radius:7px;font-size:.88rem;margin-top:12px;}
+.n-ok{background:#dcfce7;color:#166534;} .n-err{background:#fee2e2;color:#991b1b;}
+.check-mark{position:absolute;top:10px;right:12px;color:var(--accent);
+            font-size:1.1rem;display:none;}
+.bcard.on .check-mark{display:block;}
 </style>
 </head>
 <body>
 <main>
   <header>
     <div>
-      <h1>Ustawienia backendu LLM</h1>
-      <div style="color:var(--muted);font-size:0.9rem">Zmień backend bez restartu kontenera</div>
+      <h1>⚙ Ustawienia backendu LLM</h1>
+      <div style="color:var(--muted);font-size:.85rem">Zmień backend bez restartu kontenera</div>
     </div>
-    <div class="nav-links">
-      <a href="/schemat">Architektura</a>
-      <a href="/">Panel RAG</a>
-    </div>
+    <div class="nav"><a href="/">Panel RAG</a><a href="/schemat">Architektura</a></div>
   </header>
 
+  <!-- Status -->
   <div class="card">
-    <h2>Status serwerów</h2>
-    <div class="status-row" id="status-row">
-      <div class="status-chip"><div class="dot dot-warn"></div>Sprawdzam...</div>
+    <div class="card-title">Status serwerów</div>
+    <div class="status-row" id="srv-status">
+      <div class="schip"><div class="dot warn-d"></div>Sprawdzam...</div>
     </div>
   </div>
 
+  <!-- Backend type chooser -->
   <div class="card">
-    <h2>Typ backendu</h2>
-    <p class="section-note">
-      <strong>ollama</strong> — Ollama API (/api/embeddings, /api/generate)<br>
-      <strong>openai</strong> — OpenAI-compatible (/v1/embeddings, /v1/chat/completions) — działa z vLLM, llama.cpp server, LM Studio
-    </p>
-    <div class="field">
-      <label>Globalny backend (domyślny dla wszystkich komponentów)</label>
-      <div class="backend-pills" id="global-pills">
-        <div class="pill" data-val="ollama" onclick="setPill('global','ollama')">🦙 Ollama</div>
-        <div class="pill" data-val="openai" onclick="setPill('global','openai')">⚡ OpenAI-compatible (vLLM / llama.cpp)</div>
+    <div class="card-title">Wybierz backend LLM</div>
+    <div class="backend-grid">
+      <div class="bcard" id="bc-ollama" onclick="selectBackend('ollama')">
+        <div class="check-mark">✓</div>
+        <div class="bc-icon">🦙</div>
+        <div class="bc-name">Ollama</div>
+        <div class="bc-desc">Lokalny serwer Ollama<br>Najprostsze ustawienie</div>
+        <span class="bc-port">:11434</span>
       </div>
-    </div>
-    <div class="row3">
-      <div class="field">
-        <label>Embeddingi</label>
-        <select id="embed_backend_type" onchange="markDirty()">
-          <option value="">— dziedzicz globalny —</option>
-          <option value="ollama">ollama</option>
-          <option value="openai">openai</option>
-        </select>
+      <div class="bcard" id="bc-openai-vllm" onclick="selectBackend('openai','vllm')">
+        <div class="check-mark">✓</div>
+        <div class="bc-icon">⚡</div>
+        <div class="bc-name">vLLM</div>
+        <div class="bc-desc">Szybki inference GPU<br>OpenAI-compatible API</div>
+        <span class="bc-port">:8000</span>
       </div>
-      <div class="field">
-        <label>Generowanie</label>
-        <select id="gen_backend_type" onchange="markDirty()">
-          <option value="">— dziedzicz globalny —</option>
-          <option value="ollama">ollama</option>
-          <option value="openai">openai</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Reranker</label>
-        <select id="rerank_backend_type" onchange="markDirty()">
-          <option value="">— dziedzicz globalny —</option>
-          <option value="ollama">ollama</option>
-          <option value="openai">openai</option>
-        </select>
+      <div class="bcard" id="bc-openai-llama" onclick="selectBackend('openai','llama')">
+        <div class="check-mark">✓</div>
+        <div class="bc-icon">🔥</div>
+        <div class="bc-name">llama.cpp</div>
+        <div class="bc-desc">llama-server<br>OpenAI-compatible API</div>
+        <span class="bc-port">:8080</span>
       </div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Adresy serwerów</h2>
-    <div class="row">
-      <div class="field">
-        <label>Embedding URL</label>
-        <input id="embed_url" type="url" oninput="markDirty()">
-      </div>
-      <div class="field">
-        <label>Embedding model</label>
-        <input id="embed_model" type="text" oninput="markDirty()">
-      </div>
+  <!-- Wizard: URL input (appears after selecting backend) -->
+  <div class="url-wizard" id="url-wizard">
+    <div class="url-wizard-title" id="wizard-title">Podaj adres serwera</div>
+    <div id="wizard-body"></div>
+    <div style="display:flex;gap:10px;margin-top:6px">
+      <button class="btn btn-save" onclick="save()">💾 Zapisz</button>
+      <button class="btn btn-test" onclick="test()">🔍 Testuj</button>
     </div>
-    <div class="row3">
-      <div class="field">
-        <label>GPU URL</label>
-        <input id="gpu_url" type="url" oninput="markDirty()">
+    <div id="notice"></div>
+  </div>
+
+  <!-- Advanced settings -->
+  <div class="card">
+    <div class="toggle-adv" onclick="toggleAdv()">
+      <span id="adv-arrow">▶</span> Ustawienia zaawansowane (osobne backendy per komponent, reranker)
+    </div>
+    <div class="adv-section" id="adv-section">
+      <div style="margin-bottom:14px">
+        <div class="field"><label>Embedding URL (osobny, jeśli różni się od generowania)</label>
+          <input id="embed_url" type="url" oninput="dirty=true" placeholder="zostaw puste = użyj głównego URL"></div>
+        <div class="row2">
+          <div class="field"><label>Embedding model</label>
+            <input id="embed_model" type="text" oninput="dirty=true"></div>
+          <div class="field"><label>Reranker model</label>
+            <input id="rerank_model" type="text" oninput="dirty=true"></div>
+        </div>
       </div>
-      <div class="field">
-        <label>CPU URL</label>
-        <input id="cpu_url" type="url" oninput="markDirty()">
+      <div style="margin-bottom:14px">
+        <div style="font-weight:600;font-size:.82rem;color:var(--muted);
+                    text-transform:uppercase;letter-spacing:.04em;margin-bottom:8px">
+          Osobny backend per komponent (puste = dziedzicz globalny)
+        </div>
+        <div class="row3">
+          <div class="field"><label>Embeddingi</label>
+            <select id="embed_backend_type" onchange="dirty=true">
+              <option value="">— globalny —</option>
+              <option value="ollama">ollama</option>
+              <option value="openai">openai</option>
+            </select></div>
+          <div class="field"><label>Generowanie</label>
+            <select id="gen_backend_type" onchange="dirty=true">
+              <option value="">— globalny —</option>
+              <option value="ollama">ollama</option>
+              <option value="openai">openai</option>
+            </select></div>
+          <div class="field"><label>Reranker</label>
+            <select id="rerank_backend_type" onchange="dirty=true">
+              <option value="">— globalny —</option>
+              <option value="ollama">ollama</option>
+              <option value="openai">openai</option>
+            </select></div>
+        </div>
       </div>
-      <div class="field">
-        <label>Laptop URL</label>
-        <input id="laptop_url" type="url" oninput="markDirty()">
-      </div>
+      <div class="field"><label>OpenAI API key (dla vLLM/llama.cpp wpisz dowolne, np. "na")</label>
+        <input id="openai_api_key" type="password" placeholder="na" oninput="dirty=true"></div>
     </div>
   </div>
 
-  <div class="card">
-    <h2>Reranker</h2>
-    <div class="row">
-      <div class="field">
-        <label>Reranker URL (puste = embed URL)</label>
-        <input id="rerank_url" type="url" oninput="markDirty()">
-      </div>
-      <div class="field">
-        <label>Reranker model</label>
-        <input id="rerank_model" type="text" oninput="markDirty()">
-      </div>
-    </div>
-  </div>
-
-  <div class="card">
-    <h2>OpenAI API key (dla openai backendu)</h2>
-    <div class="field">
-      <label>API key — vLLM i llama.cpp akceptują dowolną wartość, np. "na"</label>
-      <input id="openai_api_key" type="password" placeholder="na" oninput="markDirty()">
-    </div>
-  </div>
-
-  <div style="display:flex;gap:12px;align-items:center">
-    <button class="btn btn-primary" onclick="saveSettings()">Zapisz ustawienia</button>
-    <button class="btn btn-test" onclick="testConnections()">Testuj połączenia</button>
-    <span id="save-notice"></span>
-  </div>
-  <div id="notice"></div>
 </main>
-
 <script>
-let dirty = false;
-let currentConfig = {};
+let dirty=false;
+let currentBackend='ollama';
+let currentVariant='';
 
-function markDirty() { dirty = true; }
+const BACKEND_DEFAULTS={
+  ollama: {port:'11434', placeholder:'http://192.168.1.X:11434', embed_model:'nomic-embed-text'},
+  vllm:   {port:'8000',  placeholder:'http://192.168.1.X:8000',  embed_model:'text-embedding-ada-002'},
+  llama:  {port:'8080',  placeholder:'http://192.168.1.X:8080',  embed_model:'nomic-embed-text'},
+};
 
-function setPill(group, val) {
-  document.querySelectorAll(`#${group}-pills .pill`).forEach(p => {
-    p.classList.toggle('active', p.dataset.val === val);
+function selectBackend(type, variant=''){
+  currentBackend=type;
+  currentVariant=variant;
+  // highlight card
+  document.querySelectorAll('.bcard').forEach(c=>c.classList.remove('on'));
+  const cardId = type==='ollama' ? 'bc-ollama' : variant==='vllm' ? 'bc-openai-vllm' : 'bc-openai-llama';
+  document.getElementById(cardId).classList.add('on');
+
+  const key = variant||type;
+  const def = BACKEND_DEFAULTS[key] || BACKEND_DEFAULTS.ollama;
+  const isOpenAI = type==='openai';
+  const name = type==='ollama' ? 'Ollama' : variant==='vllm' ? 'vLLM' : 'llama.cpp server';
+
+  document.getElementById('wizard-title').textContent = `Adresy serwerów — ${name}`;
+
+  const urlVal = (id) => document.getElementById(id)?.value || '';
+
+  document.getElementById('wizard-body').innerHTML = `
+    <div style="margin-bottom:12px">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px">
+        Szybkie wypełnienie (kliknij żeby wstawić):
+      </div>
+      <div class="quick-chips">
+        <span class="qchip" onclick="fillAll('http://localhost:${def.port}')">localhost:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://127.0.0.1:${def.port}')">127.0.0.1:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://192.168.1.1:${def.port}')">192.168.1.1:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://192.168.18.34:${def.port}')">192.168.18.34:${def.port}</span>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>GPU / główny serwer</label>
+        <input id="gpu_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true"
+               value="${urlVal('gpu_url')}"></div>
+      <div class="field"><label>CPU / fallback</label>
+        <input id="cpu_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true"
+               value="${urlVal('cpu_url')}"></div>
+      <div class="field"><label>Laptop / trzeci</label>
+        <input id="laptop_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true"
+               value="${urlVal('laptop_url')}"></div>
+    </div>
+    ${isOpenAI ? `<div class="field" style="max-width:360px"><label>API key (np. "na" dla vLLM)</label>
+      <input id="openai_api_key_w" type="text" placeholder="na" oninput="dirty=true"
+             value="${document.getElementById('openai_api_key')?.value||'na'}"></div>` : ''}
+  `;
+
+  document.getElementById('url-wizard').classList.add('show');
+  dirty=true;
+}
+
+function fillAll(url){
+  ['gpu_url','cpu_url','laptop_url'].forEach(id=>{
+    const e=document.getElementById(id);if(e)e.value=url;
   });
-  markDirty();
+  dirty=true;
 }
 
-function activePill(group) {
-  const active = document.querySelector(`#${group}-pills .pill.active`);
-  return active ? active.dataset.val : 'ollama';
+function toggleAdv(){
+  const s=document.getElementById('adv-section');
+  const a=document.getElementById('adv-arrow');
+  s.classList.toggle('open');
+  a.textContent=s.classList.contains('open')?'▼':'▶';
 }
 
-async function loadSettings() {
-  const r = await fetch('/api/settings');
-  const d = await r.json();
-  currentConfig = d;
+function set(id,val){const e=document.getElementById(id);if(e)e.value=val||'';}
+function setSelect(id,val){const e=document.getElementById(id);if(e)e.value=val||'';}
 
-  setPill('global', d.backend_type || 'ollama');
-  setSelect('embed_backend_type', d.embed_backend_type || '');
-  setSelect('gen_backend_type', d.gen_backend_type || '');
-  setSelect('rerank_backend_type', d.rerank_backend_type || '');
-  setValue('embed_url', d.embed_url);
-  setValue('embed_model', d.embed_model);
-  setValue('gpu_url', d.gpu_url);
-  setValue('cpu_url', d.cpu_url);
-  setValue('laptop_url', d.laptop_url);
-  setValue('rerank_url', d.rerank_url);
-  setValue('rerank_model', d.rerank_model);
-  setValue('openai_api_key', d.openai_api_key === '***' ? '' : d.openai_api_key);
+async function load(){
+  const d=await(await fetch('/api/settings')).json();
 
-  renderStatus(d.status || {});
-  dirty = false;
-}
-
-function setValue(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.value = val || '';
-}
-function setSelect(id, val) {
-  const el = document.getElementById(id);
-  if (el) el.value = val || '';
-}
-
-function renderStatus(status) {
-  const labels = { gpu: 'GPU', cpu: 'CPU', laptop: 'Laptop' };
-  const urls = {
-    gpu: document.getElementById('gpu_url')?.value,
-    cpu: document.getElementById('cpu_url')?.value,
-    laptop: document.getElementById('laptop_url')?.value,
-  };
-  const row = document.getElementById('status-row');
-  row.innerHTML = Object.entries(status).map(([key, ok]) => `
-    <div class="status-chip" title="${urls[key] || ''}">
-      <div class="dot ${ok ? 'dot-ok' : 'dot-err'}"></div>
-      ${labels[key] || key}: ${ok ? 'online' : 'offline'}
-      <span style="color:var(--muted);font-size:0.78rem;margin-left:4px">${(urls[key]||'').replace('http://','').replace('https://','')}</span>
-    </div>`).join('');
-}
-
-async function saveSettings() {
-  const btn = document.querySelector('.btn-primary');
-  btn.disabled = true;
-  btn.textContent = 'Zapisuję...';
-
-  const payload = {
-    backend_type: activePill('global'),
-    embed_backend_type: document.getElementById('embed_backend_type').value,
-    gen_backend_type: document.getElementById('gen_backend_type').value,
-    rerank_backend_type: document.getElementById('rerank_backend_type').value,
-    embed_url: document.getElementById('embed_url').value,
-    embed_model: document.getElementById('embed_model').value,
-    gpu_url: document.getElementById('gpu_url').value,
-    cpu_url: document.getElementById('cpu_url').value,
-    laptop_url: document.getElementById('laptop_url').value,
-    rerank_url: document.getElementById('rerank_url').value,
-    rerank_model: document.getElementById('rerank_model').value,
-    openai_api_key: document.getElementById('openai_api_key').value || 'na',
-  };
-
-  try {
-    const r = await fetch('/api/settings', {
-      method: 'POST',
-      headers: {'Content-Type': 'application/json'},
-      body: JSON.stringify(payload),
-    });
-    const d = await r.json();
-    if (d.ok) {
-      showNotice('Ustawienia zapisane.', 'ok');
-      dirty = false;
-      await loadSettings();
-    } else {
-      showNotice('Błąd zapisu: ' + JSON.stringify(d), 'err');
-    }
-  } catch(e) {
-    showNotice('Błąd: ' + e, 'err');
-  } finally {
-    btn.disabled = false;
-    btn.textContent = 'Zapisz ustawienia';
+  // Highlight correct card
+  const bt=d.backend_type||'ollama';
+  if(bt==='openai'){
+    // guess variant from port
+    const gurl=d.gpu_url||'';
+    const v=gurl.includes('8080')?'llama':'vllm';
+    currentBackend='openai';currentVariant=v;
+    const cardId=v==='vllm'?'bc-openai-vllm':'bc-openai-llama';
+    document.getElementById(cardId).classList.add('on');
+  } else {
+    currentBackend='ollama';currentVariant='';
+    document.getElementById('bc-ollama').classList.add('on');
   }
+
+  // Fill advanced fields
+  setSelect('embed_backend_type',d.embed_backend_type||'');
+  setSelect('gen_backend_type',d.gen_backend_type||'');
+  setSelect('rerank_backend_type',d.rerank_backend_type||'');
+  set('embed_url',d.embed_url);
+  set('embed_model',d.embed_model);
+  set('rerank_model',d.rerank_model);
+  set('openai_api_key',d.openai_api_key==='***'?'':d.openai_api_key);
+
+  // Trigger wizard display with current URLs prefilled
+  const key=currentVariant||currentBackend;
+  const def=BACKEND_DEFAULTS[key]||BACKEND_DEFAULTS.ollama;
+  const name=currentBackend==='ollama'?'Ollama':currentVariant==='vllm'?'vLLM':'llama.cpp server';
+  document.getElementById('wizard-title').textContent=`Adresy serwerów — ${name}`;
+  document.getElementById('wizard-body').innerHTML=`
+    <div style="margin-bottom:12px">
+      <div style="font-size:.82rem;color:var(--muted);margin-bottom:8px">Szybkie wypełnienie:</div>
+      <div class="quick-chips">
+        <span class="qchip" onclick="fillAll('http://localhost:${def.port}')">localhost:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://127.0.0.1:${def.port}')">127.0.0.1:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://192.168.1.1:${def.port}')">192.168.1.1:${def.port}</span>
+        <span class="qchip" onclick="fillAll('http://192.168.18.34:${def.port}')">192.168.18.34:${def.port}</span>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field"><label>GPU / główny serwer</label>
+        <input id="gpu_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true" value="${d.gpu_url||''}"></div>
+      <div class="field"><label>CPU / fallback</label>
+        <input id="cpu_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true" value="${d.cpu_url||''}"></div>
+      <div class="field"><label>Laptop / trzeci</label>
+        <input id="laptop_url" type="url" placeholder="${def.placeholder}" oninput="dirty=true" value="${d.laptop_url||''}"></div>
+    </div>
+    ${currentBackend==='openai'?`<div class="field" style="max-width:360px"><label>API key (np. "na")</label>
+      <input id="openai_api_key_w" type="text" placeholder="na" oninput="dirty=true" value="${d.openai_api_key==='***'?'na':d.openai_api_key||'na'}"></div>`:''}
+  `;
+  document.getElementById('url-wizard').classList.add('show');
+
+  renderStatus(d.status||{},d);
+  dirty=false;
 }
 
-async function testConnections() {
-  const btn = document.querySelectorAll('.btn-test')[0];
-  btn.textContent = 'Testuję...';
-  btn.disabled = true;
-
-  // Save first if dirty
-  if (dirty) await saveSettings();
-
-  const r = await fetch('/api/settings');
-  const d = await r.json();
-  renderStatus(d.status || {});
-  btn.textContent = 'Testuj połączenia';
-  btn.disabled = false;
+function renderStatus(status,d){
+  const labels={gpu:'GPU',cpu:'CPU',laptop:'Laptop'};
+  const urls={gpu:d.gpu_url||'',cpu:d.cpu_url||'',laptop:d.laptop_url||''};
+  document.getElementById('srv-status').innerHTML=
+    Object.entries(status).map(([k,ok])=>`
+      <div class="schip" title="${urls[k]}">
+        <div class="dot ${ok?'ok-d':'err-d'}"></div>
+        ${labels[k]||k}: <strong>${ok?'online':'offline'}</strong>
+        <span style="color:var(--muted);font-size:.75rem;margin-left:4px">${(urls[k]||'').replace(/https?:\\/\\//,'')}</span>
+      </div>`).join('');
 }
 
-function showNotice(msg, type) {
-  const el = document.getElementById('notice');
-  el.innerHTML = `<div class="notice notice-${type}">${msg}</div>`;
-  setTimeout(() => el.innerHTML = '', 4000);
+async function save(){
+  const btn=document.querySelector('.btn-save');
+  btn.disabled=true;btn.textContent='Zapisuję...';
+  // Sync wizard API key to adv field if present
+  const wkey=document.getElementById('openai_api_key_w');
+  if(wkey) document.getElementById('openai_api_key').value=wkey.value;
+
+  const p={
+    backend_type:currentBackend,
+    embed_backend_type:document.getElementById('embed_backend_type').value,
+    gen_backend_type:document.getElementById('gen_backend_type').value,
+    rerank_backend_type:document.getElementById('rerank_backend_type').value,
+    embed_url:document.getElementById('embed_url')?.value||'',
+    embed_model:document.getElementById('embed_model')?.value||'',
+    gpu_url:document.getElementById('gpu_url')?.value||'',
+    cpu_url:document.getElementById('cpu_url')?.value||'',
+    laptop_url:document.getElementById('laptop_url')?.value||'',
+    rerank_url:'',
+    rerank_model:document.getElementById('rerank_model')?.value||'',
+    openai_api_key:document.getElementById('openai_api_key')?.value||'na',
+  };
+  try{
+    const r=await(await fetch('/api/settings',{method:'POST',
+      headers:{'Content-Type':'application/json'},body:JSON.stringify(p)})).json();
+    if(r.ok){notice('✓ Zapisano — backend aktywny','ok');dirty=false;
+             const d=await(await fetch('/api/settings')).json();renderStatus(d.status||{},d);}
+    else notice('Błąd: '+JSON.stringify(r),'err');
+  }catch(e){notice('Błąd: '+e,'err');}
+  btn.disabled=false;btn.textContent='💾 Zapisz';
 }
 
-loadSettings();
+async function test(){
+  const btn=document.querySelectorAll('.btn-test')[0];
+  btn.disabled=true;btn.textContent='Sprawdzam...';
+  if(dirty)await save();
+  const d=await(await fetch('/api/settings')).json();
+  renderStatus(d.status||{},d);
+  btn.disabled=false;btn.textContent='🔍 Testuj';
+}
+
+function notice(msg,type){
+  const e=document.getElementById('notice');
+  e.innerHTML=`<div class="notice n-${type}">${msg}</div>`;
+  if(type==='ok')setTimeout(()=>e.innerHTML='',4000);
+}
+load();
 </script>
 </body>
 </html>""")
+
+
 
 
 @app.post("/retrieve")
