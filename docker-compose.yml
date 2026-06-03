@@ -1,0 +1,66 @@
+services:
+  app:
+    build: .
+    container_name: raghybrid-app
+    restart: unless-stopped
+    env_file:
+      - .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+      neo4j:
+        condition: service_healthy
+    volumes:
+      - ./knowledge:/space          # folder z wiedzą (Markdown, pliki)
+      - ./runtime:/runtime          # telemetria retrievalu (persystentna)
+    networks:
+      - raghybrid-net
+
+  db:
+    image: pgvector/pgvector:pg16-trixie
+    container_name: raghybrid-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-rag_db}
+      POSTGRES_USER: ${POSTGRES_USER:-rag_user}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-changeme}
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - raghybrid-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-rag_user} -d ${POSTGRES_DB:-rag_db}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  neo4j:
+    image: neo4j:5
+    container_name: raghybrid-neo4j
+    restart: unless-stopped
+    environment:
+      NEO4J_AUTH: ${NEO4J_USER:-neo4j}/${NEO4J_PASSWORD:-changeme}
+    volumes:
+      - neo4j_data:/data
+      - neo4j_logs:/logs
+    ports:
+      - "7474:7474"   # Neo4j Browser (opcjonalnie)
+      - "7687:7687"   # Bolt
+    networks:
+      - raghybrid-net
+    healthcheck:
+      test: ["CMD", "neo4j", "status"]
+      interval: 10s
+      timeout: 10s
+      retries: 20
+
+volumes:
+  pgdata:
+  neo4j_data:
+  neo4j_logs:
+
+networks:
+  raghybrid-net:
+    driver: bridge

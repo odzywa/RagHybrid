@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+psycopg2-binary
+python-multipart
+pydantic-settings
+requests
+pypdf
+python-docx
+neo4j

@@ -1,0 +1,51 @@
+# ── Environment & secrets ──────────────────────
+.env
+*.env
+!.env.example
+
+# ── Python ────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+*.egg
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# ── Runtime / data ────────────────────────────
+runtime/*.jsonl
+runtime/*.log
+!runtime/.gitkeep
+
+# ── Knowledge folder (your private notes) ─────
+knowledge/
+
+# ── Backups ───────────────────────────────────
+backups/
+
+# ── Docker volumes (if mounted locally) ───────
+pgdata/
+neo4j_data/
+neo4j_logs/
+
+# ── OS ────────────────────────────────────────
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+
+# ── IDE ───────────────────────────────────────
+.vscode/
+.idea/
+*.iml
+
+# ── Misc ──────────────────────────────────────
+*.deb
+*.log
+*.tmp
