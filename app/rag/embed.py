@@ -1,25 +1,14 @@
-import requests
 from app.config import settings
+from app.rag.backends import call_embed
 from app.runtime_config import embedding_urls
 
-def embed_text(text):
+
+def embed_text(text: str) -> list:
     errors = []
 
     for url in embedding_urls():
         try:
-            response = requests.post(
-                f"{url}/api/embeddings",
-                json={
-                    "model": settings.OLLAMA_EMBED_MODEL,
-                    "prompt": text
-                },
-                timeout=60
-            )
-
-            if response.status_code == 200:
-                return response.json()["embedding"]
-
-            errors.append(f"{url}: {response.text}")
+            return call_embed(url, settings.OLLAMA_EMBED_MODEL, text)
         except Exception as exc:
             errors.append(f"{url}: {exc}")
 

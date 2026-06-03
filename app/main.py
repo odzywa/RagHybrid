@@ -33,7 +33,10 @@ from app.rag.generate import generate, generate_stream
 from app.rag.rerank import rerank as smart_rerank
 from app.rag.relevance import DEFAULT_NO_CONTEXT_INSTRUCTION, calculate_relevance, env_bool
 from app.rag.smart_filter import classify_document, classify_query, rewrite_query_for_search
-from app.runtime_config import embedding_backend_status, rerank_targets, set_embedding_backend
+from app.runtime_config import (
+    embedding_backend_status, rerank_targets, set_embedding_backend,
+    get_backend_config, set_backend_config, server_available,
+)
 from app.db import init_db
 from app.db import get_db_connection
 from app.openwebui_admin import router as openwebui_admin_router
@@ -1652,6 +1655,360 @@ def get_embedding_backend():
 @app.post("/embedding_backend")
 def update_embedding_backend(req: EmbeddingBackendRequest):
     return set_embedding_backend(req.backend)
+
+
+# ── Backend settings API ──────────────────────────────────────────────────────
+
+@app.get("/api/settings")
+def api_get_settings():
+    cfg = get_backend_config()
+    return {
+        "backend_type": cfg["backend_type"],
+        "embed_backend_type": cfg["embed_backend_type"],
+        "gen_backend_type": cfg["gen_backend_type"],
+        "rerank_backend_type": cfg["rerank_backend_type"],
+        "embed_url": cfg["embed_url"],
+        "embed_model": cfg["embed_model"],
+        "gpu_url": cfg["gpu_url"],
+        "cpu_url": cfg["cpu_url"],
+        "laptop_url": cfg["laptop_url"],
+        "rerank_url": cfg["rerank_url"],
+        "rerank_model": cfg["rerank_model"],
+        "openai_api_key": "***" if cfg.get("openai_api_key") and cfg["openai_api_key"] != "na" else cfg.get("openai_api_key", "na"),
+        "status": {
+            "gpu": server_available(cfg["gpu_url"]),
+            "cpu": server_available(cfg["cpu_url"]),
+            "laptop": server_available(cfg["laptop_url"]),
+        },
+    }
+
+
+@app.post("/api/settings")
+def api_post_settings(data: dict):
+    # Don't persist masked key
+    if data.get("openai_api_key") == "***":
+        data.pop("openai_api_key", None)
+    cfg = set_backend_config(data)
+    return {"ok": True, "config": cfg}
+
+
+@app.get("/settings")
+def settings_page():
+    return HTMLResponse("""<!doctype html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>RAGHybrid — Ustawienia backendu</title>
+<style>
+  :root {
+    --bg: #f0f4f8; --panel: #fff; --text: #151922; --muted: #667085;
+    --line: #d9e1ea; --accent: #0f766e; --accent-soft: #d9f3ee;
+    --ok: #16a34a; --err: #dc2626; --warn: #d97706;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text);
+         font-family: Inter, ui-sans-serif, sans-serif; line-height: 1.6; }
+  main { width: min(860px, calc(100% - 32px)); margin: 0 auto; padding: 36px 0 56px; }
+  header { display: flex; justify-content: space-between; align-items: center;
+           padding-bottom: 20px; border-bottom: 1px solid var(--line); margin-bottom: 28px; }
+  header h1 { margin: 0; font-size: 1.4rem; }
+  .nav-links { display: flex; gap: 16px; }
+  .nav-links a { color: var(--accent); text-decoration: none; font-weight: 600; font-size: 0.9rem; }
+  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 10px;
+          padding: 24px; margin-bottom: 20px; }
+  .card h2 { margin: 0 0 16px; font-size: 1rem; color: var(--accent);
+             border-bottom: 1px solid var(--line); padding-bottom: 8px; }
+  .field { margin-bottom: 14px; }
+  .field label { display: block; font-weight: 600; font-size: 0.85rem;
+                 color: var(--muted); margin-bottom: 4px; text-transform: uppercase;
+                 letter-spacing: 0.04em; }
+  .field input, .field select {
+    width: 100%; padding: 9px 12px; border: 1px solid var(--line);
+    border-radius: 6px; font: inherit; font-size: 0.92rem;
+    background: #f8fafc; transition: border 0.15s;
+  }
+  .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+  .row { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+  .row3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; }
+  .status-row { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; }
+  .status-chip { display: flex; align-items: center; gap: 6px; background: #f8fafc;
+                 border: 1px solid var(--line); border-radius: 20px;
+                 padding: 4px 12px; font-size: 0.82rem; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .dot-ok  { background: var(--ok); }
+  .dot-err { background: var(--err); }
+  .dot-warn { background: var(--warn); animation: pulse 1.5s infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+  .btn { padding: 10px 22px; border: none; border-radius: 7px; cursor: pointer;
+         font: inherit; font-size: 0.92rem; font-weight: 600; transition: background 0.15s; }
+  .btn-primary { background: var(--accent); color: #fff; }
+  .btn-primary:hover { background: #115e59; }
+  .btn-test { background: #f0f4f8; color: var(--text); border: 1px solid var(--line); }
+  .btn-test:hover { background: #e2e8f0; }
+  .notice { padding: 10px 14px; border-radius: 7px; font-size: 0.88rem; margin-top: 12px; }
+  .notice-ok  { background: #dcfce7; color: #166534; }
+  .notice-err { background: #fee2e2; color: #991b1b; }
+  .section-note { font-size: 0.82rem; color: var(--muted); margin: -8px 0 12px; }
+  .backend-pills { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pill { padding: 6px 16px; border-radius: 20px; border: 2px solid var(--line);
+          cursor: pointer; font-size: 0.88rem; font-weight: 600; background: #fff;
+          transition: all 0.15s; }
+  .pill.active { border-color: var(--accent); background: var(--accent-soft); color: #0f766e; }
+  .pill:hover:not(.active) { border-color: #94a3b8; }
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <div>
+      <h1>Ustawienia backendu LLM</h1>
+      <div style="color:var(--muted);font-size:0.9rem">Zmień backend bez restartu kontenera</div>
+    </div>
+    <div class="nav-links">
+      <a href="/schemat">Architektura</a>
+      <a href="/">Panel RAG</a>
+    </div>
+  </header>
+
+  <div class="card">
+    <h2>Status serwerów</h2>
+    <div class="status-row" id="status-row">
+      <div class="status-chip"><div class="dot dot-warn"></div>Sprawdzam...</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Typ backendu</h2>
+    <p class="section-note">
+      <strong>ollama</strong> — Ollama API (/api/embeddings, /api/generate)<br>
+      <strong>openai</strong> — OpenAI-compatible (/v1/embeddings, /v1/chat/completions) — działa z vLLM, llama.cpp server, LM Studio
+    </p>
+    <div class="field">
+      <label>Globalny backend (domyślny dla wszystkich komponentów)</label>
+      <div class="backend-pills" id="global-pills">
+        <div class="pill" data-val="ollama" onclick="setPill('global','ollama')">🦙 Ollama</div>
+        <div class="pill" data-val="openai" onclick="setPill('global','openai')">⚡ OpenAI-compatible (vLLM / llama.cpp)</div>
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>Embeddingi</label>
+        <select id="embed_backend_type" onchange="markDirty()">
+          <option value="">— dziedzicz globalny —</option>
+          <option value="ollama">ollama</option>
+          <option value="openai">openai</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Generowanie</label>
+        <select id="gen_backend_type" onchange="markDirty()">
+          <option value="">— dziedzicz globalny —</option>
+          <option value="ollama">ollama</option>
+          <option value="openai">openai</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Reranker</label>
+        <select id="rerank_backend_type" onchange="markDirty()">
+          <option value="">— dziedzicz globalny —</option>
+          <option value="ollama">ollama</option>
+          <option value="openai">openai</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Adresy serwerów</h2>
+    <div class="row">
+      <div class="field">
+        <label>Embedding URL</label>
+        <input id="embed_url" type="url" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Embedding model</label>
+        <input id="embed_model" type="text" oninput="markDirty()">
+      </div>
+    </div>
+    <div class="row3">
+      <div class="field">
+        <label>GPU URL</label>
+        <input id="gpu_url" type="url" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>CPU URL</label>
+        <input id="cpu_url" type="url" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Laptop URL</label>
+        <input id="laptop_url" type="url" oninput="markDirty()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Reranker</h2>
+    <div class="row">
+      <div class="field">
+        <label>Reranker URL (puste = embed URL)</label>
+        <input id="rerank_url" type="url" oninput="markDirty()">
+      </div>
+      <div class="field">
+        <label>Reranker model</label>
+        <input id="rerank_model" type="text" oninput="markDirty()">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>OpenAI API key (dla openai backendu)</h2>
+    <div class="field">
+      <label>API key — vLLM i llama.cpp akceptują dowolną wartość, np. "na"</label>
+      <input id="openai_api_key" type="password" placeholder="na" oninput="markDirty()">
+    </div>
+  </div>
+
+  <div style="display:flex;gap:12px;align-items:center">
+    <button class="btn btn-primary" onclick="saveSettings()">Zapisz ustawienia</button>
+    <button class="btn btn-test" onclick="testConnections()">Testuj połączenia</button>
+    <span id="save-notice"></span>
+  </div>
+  <div id="notice"></div>
+</main>
+
+<script>
+let dirty = false;
+let currentConfig = {};
+
+function markDirty() { dirty = true; }
+
+function setPill(group, val) {
+  document.querySelectorAll(`#${group}-pills .pill`).forEach(p => {
+    p.classList.toggle('active', p.dataset.val === val);
+  });
+  markDirty();
+}
+
+function activePill(group) {
+  const active = document.querySelector(`#${group}-pills .pill.active`);
+  return active ? active.dataset.val : 'ollama';
+}
+
+async function loadSettings() {
+  const r = await fetch('/api/settings');
+  const d = await r.json();
+  currentConfig = d;
+
+  setPill('global', d.backend_type || 'ollama');
+  setSelect('embed_backend_type', d.embed_backend_type || '');
+  setSelect('gen_backend_type', d.gen_backend_type || '');
+  setSelect('rerank_backend_type', d.rerank_backend_type || '');
+  setValue('embed_url', d.embed_url);
+  setValue('embed_model', d.embed_model);
+  setValue('gpu_url', d.gpu_url);
+  setValue('cpu_url', d.cpu_url);
+  setValue('laptop_url', d.laptop_url);
+  setValue('rerank_url', d.rerank_url);
+  setValue('rerank_model', d.rerank_model);
+  setValue('openai_api_key', d.openai_api_key === '***' ? '' : d.openai_api_key);
+
+  renderStatus(d.status || {});
+  dirty = false;
+}
+
+function setValue(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+function setSelect(id, val) {
+  const el = document.getElementById(id);
+  if (el) el.value = val || '';
+}
+
+function renderStatus(status) {
+  const labels = { gpu: 'GPU', cpu: 'CPU', laptop: 'Laptop' };
+  const urls = {
+    gpu: document.getElementById('gpu_url')?.value,
+    cpu: document.getElementById('cpu_url')?.value,
+    laptop: document.getElementById('laptop_url')?.value,
+  };
+  const row = document.getElementById('status-row');
+  row.innerHTML = Object.entries(status).map(([key, ok]) => `
+    <div class="status-chip" title="${urls[key] || ''}">
+      <div class="dot ${ok ? 'dot-ok' : 'dot-err'}"></div>
+      ${labels[key] || key}: ${ok ? 'online' : 'offline'}
+      <span style="color:var(--muted);font-size:0.78rem;margin-left:4px">${(urls[key]||'').replace('http://','').replace('https://','')}</span>
+    </div>`).join('');
+}
+
+async function saveSettings() {
+  const btn = document.querySelector('.btn-primary');
+  btn.disabled = true;
+  btn.textContent = 'Zapisuję...';
+
+  const payload = {
+    backend_type: activePill('global'),
+    embed_backend_type: document.getElementById('embed_backend_type').value,
+    gen_backend_type: document.getElementById('gen_backend_type').value,
+    rerank_backend_type: document.getElementById('rerank_backend_type').value,
+    embed_url: document.getElementById('embed_url').value,
+    embed_model: document.getElementById('embed_model').value,
+    gpu_url: document.getElementById('gpu_url').value,
+    cpu_url: document.getElementById('cpu_url').value,
+    laptop_url: document.getElementById('laptop_url').value,
+    rerank_url: document.getElementById('rerank_url').value,
+    rerank_model: document.getElementById('rerank_model').value,
+    openai_api_key: document.getElementById('openai_api_key').value || 'na',
+  };
+
+  try {
+    const r = await fetch('/api/settings', {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(payload),
+    });
+    const d = await r.json();
+    if (d.ok) {
+      showNotice('Ustawienia zapisane.', 'ok');
+      dirty = false;
+      await loadSettings();
+    } else {
+      showNotice('Błąd zapisu: ' + JSON.stringify(d), 'err');
+    }
+  } catch(e) {
+    showNotice('Błąd: ' + e, 'err');
+  } finally {
+    btn.disabled = false;
+    btn.textContent = 'Zapisz ustawienia';
+  }
+}
+
+async function testConnections() {
+  const btn = document.querySelectorAll('.btn-test')[0];
+  btn.textContent = 'Testuję...';
+  btn.disabled = true;
+
+  // Save first if dirty
+  if (dirty) await saveSettings();
+
+  const r = await fetch('/api/settings');
+  const d = await r.json();
+  renderStatus(d.status || {});
+  btn.textContent = 'Testuj połączenia';
+  btn.disabled = false;
+}
+
+function showNotice(msg, type) {
+  const el = document.getElementById('notice');
+  el.innerHTML = `<div class="notice notice-${type}">${msg}</div>`;
+  setTimeout(() => el.innerHTML = '', 4000);
+}
+
+loadSettings();
+</script>
+</body>
+</html>""")
 
 
 @app.post("/retrieve")
