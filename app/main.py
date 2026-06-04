@@ -1751,10 +1751,22 @@ header h1{margin:0;font-size:1.35rem;}
        cursor:pointer;font-size:.78rem;background:#f8fafc;font-family:monospace;}
 .qchip:hover{background:var(--asoft);border-color:var(--accent);}
 
-/* Status */
-.status-row{display:flex;gap:8px;flex-wrap:wrap;}
-.schip{display:flex;align-items:center;gap:6px;background:#f8fafc;
-       border:1px solid var(--line);border-radius:20px;padding:5px 14px;font-size:.82rem;}
+/* Status — editable server list */
+.srv-list{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;}
+.srv-item{border:1px solid var(--line);border-radius:8px;padding:12px 14px;background:#f8fafc;}
+.srv-item.online{border-left:3px solid var(--ok);}
+.srv-item.offline{border-left:3px solid var(--err);}
+.srv-item.checking{border-left:3px solid var(--warn);}
+.srv-header{display:flex;align-items:center;gap:8px;margin-bottom:8px;}
+.srv-label{font-weight:700;font-size:.88rem;}
+.srv-badge{font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:10px;}
+.badge-ok{background:#dcfce7;color:#166534;}
+.badge-err{background:#fee2e2;color:#991b1b;}
+.badge-chk{background:#fef3c7;color:#92400e;}
+.srv-input{width:100%;padding:7px 10px;border:1px solid var(--line);
+           border-radius:6px;font:inherit;font-size:.85rem;background:#fff;
+           font-family:monospace;}
+.srv-input:focus{outline:none;border-color:var(--accent);}
 .dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
 .ok-d{background:var(--ok);} .err-d{background:var(--err);}
 .warn-d{background:var(--warn);animation:pulse 1.5s infinite;}
@@ -1789,11 +1801,16 @@ header h1{margin:0;font-size:1.35rem;}
     <div class="nav"><a href="/">Panel RAG</a><a href="/schemat">Architektura</a></div>
   </header>
 
-  <!-- Status -->
+  <!-- Status — editable -->
   <div class="card">
-    <div class="card-title">Status serwerów</div>
-    <div class="status-row" id="srv-status">
-      <div class="schip"><div class="dot warn-d"></div>Sprawdzam...</div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+      <div class="card-title" style="margin-bottom:0;border:none;padding:0">Serwery — status i adresy</div>
+      <button class="btn btn-test" style="padding:5px 14px;font-size:.82rem" onclick="testOnly()">🔍 Odśwież status</button>
+    </div>
+    <div class="srv-list" id="srv-status">
+      <div class="srv-item checking"><div class="srv-header"><span class="srv-label">GPU</span><span class="srv-badge badge-chk">sprawdzam…</span></div></div>
+      <div class="srv-item checking"><div class="srv-header"><span class="srv-label">CPU</span><span class="srv-badge badge-chk">sprawdzam…</span></div></div>
+      <div class="srv-item checking"><div class="srv-header"><span class="srv-label">Laptop</span><span class="srv-badge badge-chk">sprawdzam…</span></div></div>
     </div>
   </div>
 
@@ -2020,15 +2037,61 @@ async function load(){
 }
 
 function renderStatus(status,d){
-  const labels={gpu:'GPU',cpu:'CPU',laptop:'Laptop'};
-  const urls={gpu:d.gpu_url||'',cpu:d.cpu_url||'',laptop:d.laptop_url||''};
+  const cfg={
+    gpu:   {label:'GPU',    key:'gpu_url',    url:d.gpu_url||''},
+    cpu:   {label:'CPU',    key:'cpu_url',    url:d.cpu_url||''},
+    laptop:{label:'Laptop', key:'laptop_url', url:d.laptop_url||''},
+  };
   document.getElementById('srv-status').innerHTML=
-    Object.entries(status).map(([k,ok])=>`
-      <div class="schip" title="${urls[k]}">
-        <div class="dot ${ok?'ok-d':'err-d'}"></div>
-        ${labels[k]||k}: <strong>${ok?'online':'offline'}</strong>
-        <span style="color:var(--muted);font-size:.75rem;margin-left:4px">${(urls[k]||'').replace(/https?:\\/\\//,'')}</span>
-      </div>`).join('');
+    Object.entries(cfg).map(([k,c])=>{
+      const ok=status[k];
+      const cls=ok==null?'checking':ok?'online':'offline';
+      const badge=ok==null?'<span class="srv-badge badge-chk">sprawdzam…</span>'
+                 :ok?'<span class="srv-badge badge-ok">● online</span>'
+                    :'<span class="srv-badge badge-err">✕ offline</span>';
+      return `
+      <div class="srv-item ${cls}">
+        <div class="srv-header">
+          <span class="srv-label">${c.label}</span>${badge}
+        </div>
+        <input class="srv-input" id="srv-${k}" type="url"
+               value="${c.url}" placeholder="http://adres:port"
+               oninput="onSrvInput('${k}',this.value)">
+      </div>`;
+    }).join('');
+}
+
+function onSrvInput(key, val){
+  // Sync to wizard URL fields if they exist
+  const map={gpu:'gpu_url',cpu:'cpu_url',laptop:'laptop_url'};
+  const el=document.getElementById(map[key]);
+  if(el) el.value=val;
+  dirty=true;
+}
+
+async function testOnly(){
+  // Save current srv-input values first, then re-fetch status
+  const keys=['gpu','cpu','laptop'];
+  const map={gpu:'gpu_url',cpu:'cpu_url',laptop:'laptop_url'};
+  keys.forEach(k=>{
+    const srv=document.getElementById('srv-'+k);
+    const wiz=document.getElementById(map[k]);
+    if(srv&&wiz) wiz.value=srv.value;
+    if(srv&&srv.value) dirty=true;
+  });
+  if(dirty) await save();
+  else {
+    const d=await(await fetch('/api/settings')).json();
+    renderStatus(d.status||{},d);
+  }
+}
+
+function getUrl(wizardId, srvKey){
+  // Prefer srv-input (status section) if user edited it, otherwise wizard field
+  const srv=document.getElementById('srv-'+srvKey);
+  const wiz=document.getElementById(wizardId);
+  if(srv&&srv.value) return srv.value;
+  return wiz?.value||'';
 }
 
 async function save(){
@@ -2045,9 +2108,9 @@ async function save(){
     rerank_backend_type:document.getElementById('rerank_backend_type').value,
     embed_url:document.getElementById('embed_url')?.value||'',
     embed_model:document.getElementById('embed_model')?.value||'',
-    gpu_url:document.getElementById('gpu_url')?.value||'',
-    cpu_url:document.getElementById('cpu_url')?.value||'',
-    laptop_url:document.getElementById('laptop_url')?.value||'',
+    gpu_url:getUrl('gpu_url','gpu'),
+    cpu_url:getUrl('cpu_url','cpu'),
+    laptop_url:getUrl('laptop_url','laptop'),
     rerank_url:'',
     rerank_model:document.getElementById('rerank_model')?.value||'',
     openai_api_key:document.getElementById('openai_api_key')?.value||'na',
@@ -2080,7 +2143,6 @@ load();
 </script>
 </body>
 </html>""")
-
 
 
 
