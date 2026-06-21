@@ -11,6 +11,8 @@ RAGHybrid łączy:
 
 Działa w pełni lokalnie. Żadne dane nie opuszczają Twojej infrastruktury.
 
+![RAGHybrid Panel](docs/screenshot.png)
+
 ---
 
 ## Architektura w 30 sekund
