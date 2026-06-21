@@ -185,6 +185,14 @@ Odpowiedź zawiera:
 | `http://localhost:8000/schemat_grafu` | Dokumentacja warstwy grafowej |
 | `http://localhost:8000/graph_explorer` | Eksplorator grafu Neo4j |
 
+### Schemat bazy grafowej
+
+![Schemat bazy grafowej](docs/baza.png)
+
+### Graph Explorer
+
+![Graph Explorer](docs/graf.png)
+
 ---
 
 ## Import danych
