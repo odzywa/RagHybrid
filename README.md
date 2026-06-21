@@ -1,5 +1,5 @@
 # RAGHybrid
-
+(docs/screenshot.png)
 Lokalny system **Retrieval-Augmented Generation** z hybrydowym wyszukiwaniem wektorowo-grafowym.
 
 RAGHybrid łączy:
